@@ -6,6 +6,26 @@ pub use cantor_macros::*;
 /// Provides the number of values for a type, as well as a 1-to-1 mapping between integers and
 /// those values. The ordering of integers in this mapping must be homomorphic to the ordering
 /// of values according to [`Ord`].
+/// 
+/// This trait may be automatically derived.
+/// 
+/// # Example
+/// ```
+/// #![feature(const_trait_impl)]
+/// #![feature(const_option)]
+/// use cantor::*;
+/// 
+/// #[derive(Finite, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
+/// enum MyType {
+///     A,
+///     B(bool),
+///     C(bool, bool)
+/// }
+/// 
+/// assert_eq!(MyType::COUNT, 7);
+/// assert_eq!(MyType::index_of(&MyType::B(false)), 1);
+/// assert_eq!(MyType::nth(4), Some(MyType::C(false, true)));
+/// ```
 pub trait Finite: Ord + Clone + Sized {
     /// The number of valid values of this type.
     const COUNT: u32;
