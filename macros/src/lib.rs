@@ -124,9 +124,11 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
     };
 
     // If this is a concrete type (no generic parameters), also implement helper traits.
-    res.extend(quote! {
-        ::cantor::impl_concrete_finite!(#name);
-    });
+    if input.generics.type_params().next().is_none() {
+        res.extend(quote! {
+            ::cantor::impl_concrete_finite!(#name);
+        });
+    }
 
     // Return final result
     TokenStream::from(res)

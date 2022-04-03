@@ -10,7 +10,8 @@ pub use compress::*;
 
 /// Provides the number of values for a type, as well as a 1-to-1 mapping between the subset of
 /// integers [0 .. N) and those values. The ordering of integers in this mapping is homomorphic to
-/// the ordering of values according to [`Ord`].
+/// the ordering of values according to [`Ord`] (i.e. `T::index_of(a) < T::index_of(b)` iff
+/// `a < b`).
 /// 
 /// This trait may be automatically derived.
 /// 
