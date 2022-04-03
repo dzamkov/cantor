@@ -103,15 +103,15 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
             TokenStream::from(quote! {
                 #[automatically_derived]
                 impl #impl_generics const ::cantor::Finite for #name #ty_generics #where_clause {
-                    const COUNT: u32 = #count;
+                    const COUNT: usize = #count;
 
-                    fn index_of(value: &Self) -> u32 {
+                    fn index_of(value: &Self) -> usize {
                         match value {
                             #(#index_of_arms,)*
                         }
                     }
 
-                    fn nth(index: u32) -> Option<Self> {
+                    fn nth(index: usize) -> Option<Self> {
                         #(#consts)*
                         match index {
                             #(#nth_arms,)*
@@ -219,7 +219,7 @@ impl SumExpr {
         }
         let ident = format!("C_{}", consts.len());
         let ident = Ident::new(&*ident, Span::call_site());
-        consts.push(quote! { const #ident: u32 = #self; });
+        consts.push(quote! { const #ident: usize = #self; });
         SimpleNumTerm::Constant(ident)
     }
 }

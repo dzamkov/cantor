@@ -3,7 +3,7 @@ use crate::*;
 /// Ensures that the integer mapping of the given [`Finite`] is a valid bijection of the given
 /// size.
 #[allow(dead_code)]
-fn validate<F: Finite>(expected: u32) {
+fn validate<F: Finite>(expected: usize) {
     assert_eq!(expected, F::COUNT);
     for i in 0..F::COUNT {
         assert_eq!(i, F::index_of(&F::nth(i).unwrap()));
