@@ -2,7 +2,11 @@
 #![feature(const_trait_impl)]
 #![feature(const_option)]
 extern crate self as cantor;
+pub mod uint;
+mod compress;
+
 pub use cantor_macros::*;
+pub use compress::*;
 
 /// Provides the number of values for a type, as well as a 1-to-1 mapping between the subset of
 /// integers [0 .. N) and those values. The ordering of integers in this mapping is homomorphic to
@@ -38,6 +42,22 @@ pub trait Finite: Ord + Clone + Sized {
     /// Gets the value with the given index as returned by [`Finite::index_of`], or returns
     /// [`None`] if the index is out of bounds.
     fn nth(index: usize) -> Option<Self>;
+}
+
+impl const Finite for () {
+    const COUNT: usize = 1;
+
+    fn index_of(_: &Self) -> usize {
+        0
+    }
+
+    fn nth(index: usize) -> Option<Self> {
+        if index == 0 {
+            Some(())
+        } else {
+            None
+        }
+    }
 }
 
 impl const Finite for bool {
@@ -127,6 +147,21 @@ impl<A: ~const Finite, B: ~const Finite> const Finite for (A, B) {
         }
     }
 }
+
+/// Implements helper traits for a concrete (i.e. non-parameteric) type that implements `Finite`.
+#[macro_export]
+macro_rules! impl_concrete_finite {
+    ($t:ty) => {
+        unsafe impl ::cantor::CompressFinite for $t {
+            type Index = ::cantor::uint::Uint<{ ::cantor::uint::log2(<$t as Finite>::COUNT - 1) }>;
+        }
+    };
+}
+
+impl_concrete_finite!(());
+impl_concrete_finite!(bool);
+impl_concrete_finite!(u8);
+impl_concrete_finite!(u16);
 
 #[cfg(test)]
 mod tests;

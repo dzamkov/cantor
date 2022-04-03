@@ -8,7 +8,7 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    match input.data {
+    let mut res = match input.data {
         Data::Struct(_) => todo!(),
         Data::Enum(data) => {
             // Gather info from variants
@@ -100,7 +100,7 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
             nth_arms.push(quote! { _ => None });
 
             // Build implementation
-            TokenStream::from(quote! {
+            quote! {
                 #[automatically_derived]
                 impl #impl_generics const ::cantor::Finite for #name #ty_generics #where_clause {
                     const COUNT: usize = #count;
@@ -118,10 +118,18 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
                         }
                     }
                 }
-            })
+            }
         }
         Data::Union(_) => todo!(),
-    }
+    };
+
+    // If this is a concrete type (no generic parameters), also implement helper traits.
+    res.extend(quote! {
+        ::cantor::impl_concrete_finite!(#name);
+    });
+
+    // Return final result
+    TokenStream::from(res)
 }
 
 /// A [`NumTerm`] that can be used as a range bound.
