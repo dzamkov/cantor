@@ -33,7 +33,11 @@ pub use set::*;
 /// assert_eq!(MyType::index_of(MyType::B(false)), 1);
 /// assert_eq!(MyType::nth(4), Some(MyType::C(false, true)));
 /// ```
-pub trait Finite: Ord + Clone + Sized {
+/// 
+/// # Safety
+/// `index_of` must return an integer less than `COUNT`. `nth` must return a non-`None` value iff
+/// it is given an integer less than `COUNT`.
+pub unsafe trait Finite: Ord + Clone + Sized {
     /// The number of valid values of this type.
     const COUNT: usize;
 
@@ -46,7 +50,7 @@ pub trait Finite: Ord + Clone + Sized {
     fn nth(index: usize) -> Option<Self>;
 }
 
-impl Finite for () {
+unsafe impl Finite for () {
     const COUNT: usize = 1;
 
     fn index_of(_: Self) -> usize {
@@ -62,7 +66,7 @@ impl Finite for () {
     }
 }
 
-impl Finite for bool {
+unsafe impl Finite for bool {
     const COUNT: usize = 2;
 
     fn index_of(value: Self) -> usize {
@@ -78,7 +82,7 @@ impl Finite for bool {
     }
 }
 
-impl Finite for u8 {
+unsafe impl Finite for u8 {
     const COUNT: usize = 1 << 8;
 
     fn index_of(value: Self) -> usize {
@@ -94,7 +98,7 @@ impl Finite for u8 {
     }
 }
 
-impl Finite for u16 {
+unsafe impl Finite for u16 {
     const COUNT: usize = 1 << 16;
 
     fn index_of(value: Self) -> usize {
@@ -110,7 +114,7 @@ impl Finite for u16 {
     }
 }
 
-impl<T: Finite> Finite for Option<T> {
+unsafe impl<T: Finite> Finite for Option<T> {
     const COUNT: usize = 1 + T::COUNT;
 
     fn index_of(value: Self) -> usize {
@@ -131,7 +135,7 @@ impl<T: Finite> Finite for Option<T> {
     }
 }
 
-impl<A: Finite, B: Finite> Finite for (A, B) {
+unsafe impl<A: Finite, B: Finite> Finite for (A, B) {
     const COUNT: usize = A::COUNT * B::COUNT;
 
     fn index_of(value: Self) -> usize {

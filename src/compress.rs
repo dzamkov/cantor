@@ -52,7 +52,7 @@ pub fn compress<T: CompressFinite>(value: T) -> Compress<T> {
     Compress::new(value)
 }
 
-impl<T: CompressFinite> Finite for Compress<T> {
+unsafe impl<T: CompressFinite> Finite for Compress<T> {
     const COUNT: usize = T::COUNT;
 
     fn index_of(value: Self) -> usize {
