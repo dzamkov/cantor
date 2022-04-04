@@ -22,7 +22,7 @@ use crate::*;
 /// assert_eq!(size_of_val(&compressed), 1);
 /// assert_eq!(value, compressed.expand());
 /// ```
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub struct Compress<T: CompressFinite>(T::Index);
 
 /// The trait required to use [`Compress`] on a type. Theoretically, this should apply to all
@@ -67,6 +67,14 @@ impl<T: CompressFinite> Finite for Compress<T> {
         }
     }
 }
+
+impl<T: CompressFinite> Clone for Compress<T> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<T: CompressFinite> Copy for Compress<T> { }
 
 #[test]
 fn test_compress_zst() {
