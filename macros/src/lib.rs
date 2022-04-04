@@ -102,7 +102,7 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
             // Build implementation
             quote! {
                 #[automatically_derived]
-                impl #impl_generics const ::cantor::Finite for #name #ty_generics #where_clause {
+                impl #impl_generics ::cantor::Finite for #name #ty_generics #where_clause {
                     const COUNT: usize = #count;
 
                     fn index_of(value: &Self) -> usize {

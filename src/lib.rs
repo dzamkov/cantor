@@ -1,6 +1,4 @@
 #![no_std]
-#![feature(const_trait_impl)]
-#![feature(const_option)]
 extern crate self as cantor;
 pub mod uint;
 mod compress;
@@ -17,8 +15,6 @@ pub use compress::*;
 /// 
 /// # Example
 /// ```
-/// #![feature(const_trait_impl)]
-/// #![feature(const_option)]
 /// use cantor::*;
 /// 
 /// #[derive(Finite, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
@@ -45,7 +41,7 @@ pub trait Finite: Ord + Clone + Sized {
     fn nth(index: usize) -> Option<Self>;
 }
 
-impl const Finite for () {
+impl Finite for () {
     const COUNT: usize = 1;
 
     fn index_of(_: &Self) -> usize {
@@ -61,7 +57,7 @@ impl const Finite for () {
     }
 }
 
-impl const Finite for bool {
+impl Finite for bool {
     const COUNT: usize = 2;
 
     fn index_of(value: &Self) -> usize {
@@ -77,7 +73,7 @@ impl const Finite for bool {
     }
 }
 
-impl const Finite for u8 {
+impl Finite for u8 {
     const COUNT: usize = 1 << 8;
 
     fn index_of(value: &Self) -> usize {
@@ -93,7 +89,7 @@ impl const Finite for u8 {
     }
 }
 
-impl const Finite for u16 {
+impl Finite for u16 {
     const COUNT: usize = 1 << 16;
 
     fn index_of(value: &Self) -> usize {
@@ -109,7 +105,7 @@ impl const Finite for u16 {
     }
 }
 
-impl<T: ~const Finite> const Finite for Option<T> {
+impl<T: Finite> Finite for Option<T> {
     const COUNT: usize = 1 + T::COUNT;
 
     fn index_of(value: &Self) -> usize {
@@ -130,7 +126,7 @@ impl<T: ~const Finite> const Finite for Option<T> {
     }
 }
 
-impl<A: ~const Finite, B: ~const Finite> const Finite for (A, B) {
+impl<A: Finite, B: Finite> Finite for (A, B) {
     const COUNT: usize = A::COUNT * B::COUNT;
 
     fn index_of(value: &Self) -> usize {

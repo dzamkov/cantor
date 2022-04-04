@@ -7,7 +7,7 @@ pub trait UintFor<const N: usize> {
 }
 
 /// Encapsulates the required operations for unsigned integers required by this crate.
-pub trait Unsigned: Ord + Clone {
+pub trait Unsigned: Ord + Clone + Copy {
     fn from_usize_unchecked(source: usize) -> Self;
     fn to_usize(self) -> usize;
 }

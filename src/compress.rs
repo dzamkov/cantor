@@ -1,23 +1,21 @@
-use crate::*;
 use crate::uint::Unsigned;
+use crate::*;
 
 /// A compressed representation of a value of type `T`, implemented by storing its index
 /// according [`Finite::index_of`] using the smallest integer type possible.
-/// 
+///
 /// # Example
 /// ```
-/// #![feature(const_trait_impl)]
-/// #![feature(const_option)]
 /// use cantor::*;
 /// use core::mem::size_of_val;
-/// 
+///
 /// #[derive(Finite, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
 /// enum MyType {
 ///     A,
 ///     B(bool),
 ///     C(bool, bool)
 /// }
-/// 
+///
 /// let value = MyType::B(false);
 /// assert_eq!(size_of_val(&value), 3);
 /// let compressed = compress(value);
@@ -30,7 +28,7 @@ pub struct Compress<T: CompressFinite>(T::Index);
 /// The trait required to use [`Compress`] on a type. Theoretically, this should apply to all
 /// [`Finite`] types, but due to limitations in const generics, a blanket implementation is not
 /// currently possible.
-/// 
+///
 /// This is automatically implemented on concrete types that derive [`Finite`]. It can also be
 /// implemented on a particular concrete type using [`impl_concrete_finite`].
 pub unsafe trait CompressFinite: Finite {
@@ -39,7 +37,7 @@ pub unsafe trait CompressFinite: Finite {
 
 impl<T: CompressFinite> Compress<T> {
     /// Constructs a compressed wrapper over the given value.
-    pub fn new(value: T) -> Self {
+    pub fn new(value: &T) -> Self {
         Compress(T::Index::from_usize_unchecked(T::index_of(&value)))
     }
 
@@ -49,9 +47,9 @@ impl<T: CompressFinite> Compress<T> {
     }
 }
 
-/// Gets a compressed representation of the given value. This is a shortcut for [`Compress::new`].
+/// Gets a compressed representation of the given value.
 pub fn compress<T: CompressFinite>(value: T) -> Compress<T> {
-    Compress::new(value)
+    Compress::new(&value)
 }
 
 impl<T: CompressFinite> Finite for Compress<T> {
