@@ -105,7 +105,7 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
                 impl #impl_generics ::cantor::Finite for #name #ty_generics #where_clause {
                     const COUNT: usize = #count;
 
-                    fn index_of(value: &Self) -> usize {
+                    fn index_of(value: Self) -> usize {
                         match value {
                             #(#index_of_arms,)*
                         }

@@ -81,14 +81,14 @@ impl<K: ArrayFinite<V>, V: Default> Default for ArrayMap<K, V> {
 impl<K: ArrayFinite<V>, V> Index<K> for ArrayMap<K, V> {
     type Output = V;
     fn index(&self, index: K) -> &Self::Output {
-        let index = K::index_of(&index);
+        let index = K::index_of(index);
         unsafe { self.0.as_slice().get_unchecked(index) }
     }
 }
 
 impl<K: ArrayFinite<V>, V> IndexMut<K> for ArrayMap<K, V> {
     fn index_mut(&mut self, index: K) -> &mut Self::Output {
-        let index = K::index_of(&index);
+        let index = K::index_of(index);
         unsafe { self.0.as_slice_mut().get_unchecked_mut(index) }
     }
 }
@@ -96,14 +96,14 @@ impl<K: ArrayFinite<V>, V> IndexMut<K> for ArrayMap<K, V> {
 impl<K: CompressFinite + ArrayFinite<V>, V> Index<Compress<K>> for ArrayMap<K, V> {
     type Output = V;
     fn index(&self, index: Compress<K>) -> &Self::Output {
-        let index = Compress::index_of(&index);
+        let index = Compress::index_of(index);
         unsafe { self.0.as_slice().get_unchecked(index) }
     }
 }
 
 impl<K: CompressFinite + ArrayFinite<V>, V> IndexMut<Compress<K>> for ArrayMap<K, V> {
     fn index_mut(&mut self, index: Compress<K>) -> &mut Self::Output {
-        let index = Compress::index_of(&index);
+        let index = Compress::index_of(index);
         unsafe { self.0.as_slice_mut().get_unchecked_mut(index) }
     }
 }

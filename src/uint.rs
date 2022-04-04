@@ -1,76 +1,142 @@
+use core::ops::{BitAnd, BitOr, Not};
+
 /// A compact, generic unsigned integer with at least the given number of bits.
-pub type Uint<const N: usize> = <() as UintFor<N>>::Backing;
+pub type Uint<const N: usize> = <NumBits<'static, N> as HasUint>::Uint;
+
+/// A type that implements [`HasUint`] for all sizes that have an [`Unsigned`] implementation.
+/// 
+/// This has a lifetime parameter in order to work around issues with
+/// [trivial constraints](https://github.com/rust-lang/rust/issues/48214).
+pub struct NumBits<'a, const N: usize>(&'a ());
 
 /// Defines the [`Uint`] backing type for a certain number of bits.
-pub trait UintFor<const N: usize> {
-    type Backing: Unsigned;
+pub trait HasUint {
+    type Uint: Unsigned;
 }
 
 /// Encapsulates the required operations for unsigned integers required by this crate.
-pub trait Unsigned: Ord + Clone + Copy {
+pub trait Unsigned:
+    Ord + Clone + Copy + BitOr<Self, Output = Self> + BitAnd<Self, Output = Self> + Not<Output = Self>
+{
+    const ZERO: Self;
     fn from_usize_unchecked(source: usize) -> Self;
     fn to_usize(self) -> usize;
+    fn ones(n: usize) -> Self;
+    fn one_at(i: usize) -> Self;
+    fn count_ones(self) -> usize;
+    fn first_one(self) -> Option<usize>;
+    fn last_one(self) -> Option<usize>;
 }
 
-impl Unsigned for () {
+/// A zero-sized type that implements [`Unsigned`].
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[allow(non_camel_case_types)]
+pub struct u0;
+
+impl BitOr<u0> for u0 {
+    type Output = u0;
+    fn bitor(self, _: u0) -> Self::Output {
+        u0
+    }
+}
+
+impl BitAnd<u0> for u0 {
+    type Output = u0;
+    fn bitand(self, _: u0) -> Self::Output {
+        u0
+    }
+}
+
+impl Not for u0 {
+    type Output = u0;
+    fn not(self) -> Self::Output {
+        u0
+    }
+}
+
+impl Unsigned for u0 {
+    const ZERO: Self = u0;
+
     fn from_usize_unchecked(_: usize) -> Self {
-        ()
+        u0
     }
 
     fn to_usize(self) -> usize {
         0
     }
-}
 
-impl Unsigned for u8 {
-    fn from_usize_unchecked(source: usize) -> Self {
-        source as u8
+    fn ones(_: usize) -> Self {
+        u0
     }
 
-    fn to_usize(self) -> usize {
-        self as usize
-    }
-}
-
-impl Unsigned for u16 {
-    fn from_usize_unchecked(source: usize) -> Self {
-        source as u16
+    fn one_at(_: usize) -> Self {
+        u0
     }
 
-    fn to_usize(self) -> usize {
-        self as usize
-    }
-}
-
-impl Unsigned for u32 {
-    fn from_usize_unchecked(source: usize) -> Self {
-        source as u32
+    fn count_ones(self) -> usize {
+        0
     }
 
-    fn to_usize(self) -> usize {
-        self as usize
+    fn first_one(self) -> Option<usize> {
+        None
+    }
+
+    fn last_one(self) -> Option<usize> {
+        None
     }
 }
 
-impl Unsigned for u64 {
-    fn from_usize_unchecked(source: usize) -> Self {
-        source as u64
-    }
+macro_rules! impl_unsigned {
+    ($t:ty) => {
+        impl Unsigned for $t {
+            const ZERO: Self = 0;
 
-    fn to_usize(self) -> usize {
-        self as usize
-    }
+            fn from_usize_unchecked(source: usize) -> Self {
+                source as $t
+            }
+
+            fn to_usize(self) -> usize {
+                self as usize
+            }
+
+            fn ones(n: usize) -> Self {
+                (1 << n) - 1
+            }
+
+            fn one_at(i: usize) -> Self {
+                1 << i
+            }
+
+            fn count_ones(self) -> usize {
+                Self::count_ones(self) as usize
+            }
+
+            fn first_one(self) -> Option<usize> {
+                let res = self.trailing_zeros();
+                if res < Self::BITS {
+                    Some(res as usize)
+                } else {
+                    None
+                }
+            }
+
+            fn last_one(self) -> Option<usize> {
+                let res = self.leading_zeros();
+                if res < Self::BITS {
+                    Some((Self::BITS - res - 1) as usize)
+                } else {
+                    None
+                }
+            }
+        }
+    };
 }
 
-impl Unsigned for u128 {
-    fn from_usize_unchecked(source: usize) -> Self {
-        source as u128
-    }
-
-    fn to_usize(self) -> usize {
-        self as usize
-    }
-}
+impl_unsigned!(u8);
+impl_unsigned!(u16);
+impl_unsigned!(u32);
+impl_unsigned!(u64);
+impl_unsigned!(u128);
 
 /// Computes the log-base-2 of an integer, rounding up if necessary.
 pub const fn log2(n: usize) -> usize {
@@ -79,14 +145,14 @@ pub const fn log2(n: usize) -> usize {
 }
 
 macro_rules! impl_uint_for {
-    ($n:expr, $backing:ty) => {
-        impl UintFor<$n> for () {
-            type Backing = $backing;
+    ($n:expr, $uint:ty) => {
+        impl<'a> HasUint for NumBits<'a, $n> {
+            type Uint = $uint;
         }
     };
 }
 
-impl_uint_for!(0, ());
+impl_uint_for!(0, u0);
 impl_uint_for!(1, u8);
 impl_uint_for!(2, u8);
 impl_uint_for!(3, u8);

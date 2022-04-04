@@ -37,8 +37,8 @@ pub unsafe trait CompressFinite: Finite {
 
 impl<T: CompressFinite> Compress<T> {
     /// Constructs a compressed wrapper over the given value.
-    pub fn new(value: &T) -> Self {
-        Compress(T::Index::from_usize_unchecked(T::index_of(&value)))
+    pub fn new(value: T) -> Self {
+        Compress(T::Index::from_usize_unchecked(T::index_of(value)))
     }
 
     /// Gets the expanded form of this compressed value.
@@ -49,14 +49,14 @@ impl<T: CompressFinite> Compress<T> {
 
 /// Gets a compressed representation of the given value.
 pub fn compress<T: CompressFinite>(value: T) -> Compress<T> {
-    Compress::new(&value)
+    Compress::new(value)
 }
 
 impl<T: CompressFinite> Finite for Compress<T> {
     const COUNT: usize = T::COUNT;
 
-    fn index_of(value: &Self) -> usize {
-        value.0.clone().to_usize()
+    fn index_of(value: Self) -> usize {
+        value.0.to_usize()
     }
 
     fn nth(index: usize) -> Option<Self> {

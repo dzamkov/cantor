@@ -6,7 +6,7 @@ use crate::*;
 fn validate<F: Finite>(expected: usize) {
     assert_eq!(expected, F::COUNT);
     for i in 0..F::COUNT {
-        assert_eq!(i, F::index_of(&F::nth(i).unwrap()));
+        assert_eq!(i, F::index_of(F::nth(i).unwrap()));
     }
     for i in 0..(F::COUNT - 1) {
         assert!(F::nth(i).unwrap() < F::nth(i + 1).unwrap());

@@ -4,10 +4,12 @@ pub mod uint;
 pub mod array;
 mod compress;
 mod map;
+mod set;
 
 pub use cantor_macros::*;
 pub use compress::*;
 pub use map::*;
+pub use set::*;
 
 /// Provides the number of values for a type, as well as a 1-to-1 mapping between the subset of
 /// integers [0 .. N) and those values. The ordering of integers in this mapping is homomorphic to
@@ -28,7 +30,7 @@ pub use map::*;
 /// }
 /// 
 /// assert_eq!(MyType::COUNT, 7);
-/// assert_eq!(MyType::index_of(&MyType::B(false)), 1);
+/// assert_eq!(MyType::index_of(MyType::B(false)), 1);
 /// assert_eq!(MyType::nth(4), Some(MyType::C(false, true)));
 /// ```
 pub trait Finite: Ord + Clone + Sized {
@@ -37,7 +39,7 @@ pub trait Finite: Ord + Clone + Sized {
 
     /// Gets a unique integer representation for the given value. This defines a 1-to-1 mapping
     /// between values of this type and non-negative integers less than [`Finite::COUNT`].
-    fn index_of(value: &Self) -> usize;
+    fn index_of(value: Self) -> usize;
 
     /// Gets the value with the given index as returned by [`Finite::index_of`], or returns
     /// [`None`] if the index is out of bounds.
@@ -47,7 +49,7 @@ pub trait Finite: Ord + Clone + Sized {
 impl Finite for () {
     const COUNT: usize = 1;
 
-    fn index_of(_: &Self) -> usize {
+    fn index_of(_: Self) -> usize {
         0
     }
 
@@ -63,8 +65,8 @@ impl Finite for () {
 impl Finite for bool {
     const COUNT: usize = 2;
 
-    fn index_of(value: &Self) -> usize {
-        *value as usize
+    fn index_of(value: Self) -> usize {
+        value as usize
     }
 
     fn nth(index: usize) -> Option<Self> {
@@ -79,8 +81,8 @@ impl Finite for bool {
 impl Finite for u8 {
     const COUNT: usize = 1 << 8;
 
-    fn index_of(value: &Self) -> usize {
-        *value as usize
+    fn index_of(value: Self) -> usize {
+        value as usize
     }
 
     fn nth(index: usize) -> Option<Self> {
@@ -95,8 +97,8 @@ impl Finite for u8 {
 impl Finite for u16 {
     const COUNT: usize = 1 << 16;
 
-    fn index_of(value: &Self) -> usize {
-        *value as usize
+    fn index_of(value: Self) -> usize {
+        value as usize
     }
 
     fn nth(index: usize) -> Option<Self> {
@@ -111,7 +113,7 @@ impl Finite for u16 {
 impl<T: Finite> Finite for Option<T> {
     const COUNT: usize = 1 + T::COUNT;
 
-    fn index_of(value: &Self) -> usize {
+    fn index_of(value: Self) -> usize {
         match value {
             Some(value) => 1 + T::index_of(value),
             None => 0
@@ -132,8 +134,8 @@ impl<T: Finite> Finite for Option<T> {
 impl<A: Finite, B: Finite> Finite for (A, B) {
     const COUNT: usize = A::COUNT * B::COUNT;
 
-    fn index_of(value: &Self) -> usize {
-        A::index_of(&value.0) * B::COUNT + B::index_of(&value.1)
+    fn index_of(value: Self) -> usize {
+        A::index_of(value.0) * B::COUNT + B::index_of(value.1)
     }
 
     fn nth(index: usize) -> Option<Self> {
@@ -159,6 +161,13 @@ macro_rules! impl_concrete_finite {
         }
         unsafe impl<V> ::cantor::ArrayFinite<V> for $t {
             type Array = [V; <$t as ::cantor::Finite>::COUNT];
+        }
+        unsafe impl ::cantor::BitmapFinite for $t
+        where
+            for<'a> ::cantor::uint::NumBits<'a, { <$t as ::cantor::Finite>::COUNT }>:
+                ::cantor::uint::HasUint
+        {
+            type Bitmap = ::cantor::uint::Uint<{ <$t as ::cantor::Finite>::COUNT }>;
         }
     };
 }
