@@ -1,10 +1,13 @@
 #![no_std]
 extern crate self as cantor;
 pub mod uint;
+pub mod array;
 mod compress;
+mod map;
 
 pub use cantor_macros::*;
 pub use compress::*;
+pub use map::*;
 
 /// Provides the number of values for a type, as well as a 1-to-1 mapping between the subset of
 /// integers [0 .. N) and those values. The ordering of integers in this mapping is homomorphic to
@@ -150,7 +153,12 @@ impl<A: Finite, B: Finite> Finite for (A, B) {
 macro_rules! impl_concrete_finite {
     ($t:ty) => {
         unsafe impl ::cantor::CompressFinite for $t {
-            type Index = ::cantor::uint::Uint<{ ::cantor::uint::log2(<$t as Finite>::COUNT - 1) }>;
+            type Index = ::cantor::uint::Uint<{ 
+                ::cantor::uint::log2(<$t as ::cantor::Finite>::COUNT - 1)
+            }>;
+        }
+        unsafe impl<V> ::cantor::ArrayFinite<V> for $t {
+            type Array = [V; <$t as ::cantor::Finite>::COUNT];
         }
     };
 }

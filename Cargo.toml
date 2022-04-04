@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 cantor_macros = { path = "macros", version = "0.1.0" }
+array-init = "2.0.0"

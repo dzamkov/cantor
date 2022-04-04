@@ -42,7 +42,7 @@ impl<T: CompressFinite> Compress<T> {
     }
 
     /// Gets the expanded form of this compressed value.
-    pub fn expand(self) -> T {
+    pub fn expand(&self) -> T {
         unsafe { T::nth(self.0.to_usize()).unwrap_unchecked() }
     }
 }
