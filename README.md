@@ -19,6 +19,13 @@ enum MyType {
 	C(bool, bool)
 }
 
+// Value iteration
+let mut num_values = 0;
+for _ in MyType::iter() {
+	num_values += 1;
+}
+assert_eq!(num_values, 7);
+
 // Value compression
 let value = MyType::B(false);
 assert_eq!(size_of_val(&value), 3);

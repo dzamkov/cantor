@@ -10,6 +10,7 @@ pub use cantor_macros::*;
 pub use compress::*;
 pub use map::*;
 pub use set::*;
+use core::marker::PhantomData;
 
 /// Provides the number of values for a type, as well as a 1-to-1 mapping between the subset of
 /// integers [0 .. N) and those values. The ordering of integers in this mapping is homomorphic to
@@ -48,6 +49,34 @@ pub unsafe trait Finite: Ord + Clone + Sized {
     /// Gets the value with the given index as returned by [`Finite::index_of`], or returns
     /// [`None`] if the index is out of bounds.
     fn nth(index: usize) -> Option<Self>;
+
+    /// Iterates over all of the values of this type.
+    fn iter() -> FiniteIter<Self> {
+        FiniteIter {
+            index: 0,
+            marker: PhantomData
+        }
+    }
+}
+
+/// An iterator over all of the values of a [`Finite`] type.
+pub struct FiniteIter<T: Finite> {
+    index: usize,
+    marker: PhantomData<fn() -> T>
+}
+
+impl<T: Finite> Iterator for FiniteIter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        let res = T::nth(self.index);
+        self.index += 1;
+        res
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let rem = T::COUNT - self.index;
+        (rem, Some(rem))
+    }
 }
 
 unsafe impl Finite for () {
