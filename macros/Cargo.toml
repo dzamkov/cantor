@@ -2,7 +2,10 @@
 name = "cantor_macros"
 version = "0.1.0"
 edition = "2021"
-license = "MIT"
+authors = ["Dmitry Zamkov <dmitry94@gmail.com>"]
+description = "Macros for cantor"
+repository = "https://github.com/dzamkov/cantor"
+license = "MIT OR Apache-2.0"
 
 [lib]
 name = "cantor_macros"

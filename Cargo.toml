@@ -2,6 +2,15 @@
 name = "cantor"
 version = "0.1.0"
 edition = "2021"
+authors = ["Dmitry Zamkov <dmitry94@gmail.com>"]
+description = "A general toolkit for working with types that have a small number of values"
+repository = "https://github.com/dzamkov/cantor"
+license = "MIT OR Apache-2.0"
+keywords = ["finite", "bijection", "enum", "bitmap", "compression"]
+categories = ["rust-patterns", "compression"]
+
+[workspace]
+members = ["macros"]
 
 [dependencies]
 cantor_macros = { path = "macros", version = "0.1.0" }
