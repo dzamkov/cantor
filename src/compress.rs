@@ -31,8 +31,10 @@ pub struct Compress<T: CompressFinite>(T::Index);
 ///
 /// This is automatically implemented on concrete types that derive [`Finite`]. It can also be
 /// implemented on a particular concrete type using [`impl_concrete_finite`].
+#[doc(hidden)]
 #[allow(clippy::missing_safety_doc)] // Should never be manually implemented.
 pub unsafe trait CompressFinite: Finite {
+    #[allow(missing_docs)]
     type Index: Unsigned;
 }
 

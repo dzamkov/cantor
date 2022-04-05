@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+#![doc(hidden)]
 use core::ops::{BitAnd, BitOr, Not};
 
 /// A compact, generic unsigned integer with at least the given number of bits.

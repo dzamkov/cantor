@@ -1,3 +1,6 @@
+#![allow(missing_docs)]
+#![doc(hidden)]
+
 /// Encapsulates the required operations for arrays required by this crate.
 pub trait Array<T> {
     fn new(f: impl FnMut(usize) -> T) -> Self;

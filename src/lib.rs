@@ -1,4 +1,12 @@
 #![no_std]
+#![warn(missing_docs)]
+//! This crate provides the [`Finite`] trait for use with types with a small number of values
+//! (typically, but not exclusively `enum`s). Deriving this trait enables several useful
+//! applications:
+//! * [Value iteration](Finite::iter)
+//! * [Value compression](Compress)
+//! * [Array-based maps](ArrayMap)
+//! * [Bitmap sets](BitmapSet)
 extern crate self as cantor;
 pub mod uint;
 pub mod array;
