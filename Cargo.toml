@@ -7,7 +7,7 @@ description = "A general toolkit for working with types that have a small number
 repository = "https://github.com/dzamkov/cantor"
 license = "MIT OR Apache-2.0"
 keywords = ["finite", "bijection", "enum", "bitmap", "compression"]
-categories = ["rust-patterns", "compression"]
+categories = ["rust-patterns", "compression", "no-std"]
 
 [workspace]
 members = ["macros"]
