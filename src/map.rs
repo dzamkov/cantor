@@ -38,6 +38,7 @@ pub struct ArrayMap<K: ArrayFinite<V>, V>(K::Array);
 ///
 /// This is automatically implemented on concrete types that derive [`Finite`]. It can also be
 /// implemented on a particular concrete type using [`impl_concrete_finite`].
+#[allow(clippy::missing_safety_doc)] // Should never be manually implemented.
 pub unsafe trait ArrayFinite<V>: Finite {
     type Array: Array<V>;
 }

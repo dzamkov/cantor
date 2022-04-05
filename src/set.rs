@@ -28,6 +28,7 @@ pub struct BitmapSet<T: BitmapFinite>(T::Bitmap);
 ///
 /// This is automatically implemented on concrete types that derive [`Finite`]. It can also be
 /// implemented on a particular concrete type using [`impl_concrete_finite`].
+#[allow(clippy::missing_safety_doc)] // Should never be manually implemented.
 pub unsafe trait BitmapFinite: Finite {
     type Bitmap: Unsigned;
 }
@@ -60,6 +61,11 @@ impl<T: BitmapFinite> BitmapSet<T> {
     /// The empty set.
     pub fn none() -> Self {
         BitmapSet(T::Bitmap::ZERO)
+    }
+
+    /// The set consisting of only the given value.
+    pub fn only(value: T) -> Self {
+        BitmapSet(T::Bitmap::one_at(T::index_of(value)))
     }
 
     /// The number of values in this set.
@@ -139,7 +145,7 @@ impl<T: BitmapFinite> DoubleEndedIterator for BitmapSet<T> {
 
 impl<T: BitmapFinite> Clone for BitmapSet<T> {
     fn clone(&self) -> Self {
-        Self(self.0.clone())
+        Self(self.0)
     }
 }
 
