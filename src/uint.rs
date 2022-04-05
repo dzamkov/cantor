@@ -1,12 +1,12 @@
 #![allow(missing_docs)]
 #![doc(hidden)]
-use core::ops::{BitAnd, BitOr, Not};
+use core::ops::{BitAnd, BitOr, BitXor, Not};
 
 /// A compact, generic unsigned integer with at least the given number of bits.
 pub type Uint<const N: usize> = <NumBits<'static, N> as HasUint>::Uint;
 
 /// A type that implements [`HasUint`] for all sizes that have an [`Unsigned`] implementation.
-/// 
+///
 /// This has a lifetime parameter in order to work around issues with
 /// [trivial constraints](https://github.com/rust-lang/rust/issues/48214).
 pub struct NumBits<'a, const N: usize>(&'a ());
@@ -18,7 +18,13 @@ pub trait HasUint {
 
 /// Encapsulates the required operations for unsigned integers required by this crate.
 pub trait Unsigned:
-    Ord + Clone + Copy + BitOr<Self, Output = Self> + BitAnd<Self, Output = Self> + Not<Output = Self>
+    Ord
+    + Clone
+    + Copy
+    + BitOr<Self, Output = Self>
+    + BitAnd<Self, Output = Self>
+    + BitXor<Self, Output = Self>
+    + Not<Output = Self>
 {
     const ZERO: Self;
     fn from_usize_unchecked(source: usize) -> Self;
@@ -45,6 +51,13 @@ impl BitOr<u0> for u0 {
 impl BitAnd<u0> for u0 {
     type Output = u0;
     fn bitand(self, _: u0) -> Self::Output {
+        u0
+    }
+}
+
+impl BitXor<u0> for u0 {
+    type Output = u0;
+    fn bitxor(self, _: u0) -> Self::Output {
         u0
     }
 }

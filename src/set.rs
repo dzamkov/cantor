@@ -1,5 +1,6 @@
 use crate::uint::Unsigned;
 use crate::*;
+use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Sub, SubAssign};
 
 /// A set of values of type `T`, implemented using a bitmap.
 ///
@@ -7,7 +8,7 @@ use crate::*;
 ///
 /// ```
 /// use cantor::{Finite, Set, BitmapSet};
-/// 
+///
 /// #[derive(Finite, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
 /// enum MyType {
 ///     A,
@@ -38,7 +39,7 @@ pub unsafe trait BitmapFinite: Finite {
 
 impl<T: BitmapFinite> BitmapSet<T> {
     /// Constructs a new [`BitmapSet`] with initial membership determined using the given function.
-    /// 
+    ///
     /// # Example
     /// ```
     /// use cantor::{Finite, Set, BitmapSet};
@@ -74,6 +75,11 @@ impl<T: BitmapFinite> BitmapSet<T> {
     /// The number of values in this set.
     pub fn size(&self) -> usize {
         T::Bitmap::count_ones(self.0)
+    }
+
+    /// Determines whether this is the empty set.
+    pub fn is_none(&self) -> bool {
+        self.0 == T::Bitmap::ZERO
     }
 }
 
@@ -146,6 +152,58 @@ impl<T: BitmapFinite> DoubleEndedIterator for BitmapSet<T> {
     }
 }
 
+impl<T: BitmapFinite> BitAnd<BitmapSet<T>> for BitmapSet<T> {
+    type Output = BitmapSet<T>;
+    fn bitand(self, rhs: BitmapSet<T>) -> Self::Output {
+        BitmapSet(self.0 & rhs.0)
+    }
+}
+
+impl<T: BitmapFinite> BitOr<BitmapSet<T>> for BitmapSet<T> {
+    type Output = BitmapSet<T>;
+    fn bitor(self, rhs: BitmapSet<T>) -> Self::Output {
+        BitmapSet(self.0 | rhs.0)
+    }
+}
+
+impl<T: BitmapFinite> BitXor<BitmapSet<T>> for BitmapSet<T> {
+    type Output = BitmapSet<T>;
+    fn bitxor(self, rhs: BitmapSet<T>) -> Self::Output {
+        BitmapSet(self.0 ^ rhs.0)
+    }
+}
+
+impl<T: BitmapFinite> Sub<BitmapSet<T>> for BitmapSet<T> {
+    type Output = BitmapSet<T>;
+    fn sub(self, rhs: BitmapSet<T>) -> Self::Output {
+        BitmapSet(self.0 & !rhs.0)
+    }
+}
+
+impl<T: BitmapFinite> BitOrAssign<BitmapSet<T>> for BitmapSet<T> {
+    fn bitor_assign(&mut self, rhs: BitmapSet<T>) {
+        *self = *self | rhs;
+    }
+}
+
+impl<T: BitmapFinite> BitAndAssign<BitmapSet<T>> for BitmapSet<T> {
+    fn bitand_assign(&mut self, rhs: BitmapSet<T>) {
+        *self = *self & rhs;
+    }
+}
+
+impl<T: BitmapFinite> BitXorAssign<BitmapSet<T>> for BitmapSet<T> {
+    fn bitxor_assign(&mut self, rhs: BitmapSet<T>) {
+        *self = *self ^ rhs;
+    }
+}
+
+impl<T: BitmapFinite> SubAssign<BitmapSet<T>> for BitmapSet<T> {
+    fn sub_assign(&mut self, rhs: BitmapSet<T>) {
+        *self = *self - rhs;
+    }
+}
+
 impl<T: BitmapFinite> Clone for BitmapSet<T> {
     fn clone(&self) -> Self {
         Self(self.0)
@@ -153,6 +211,42 @@ impl<T: BitmapFinite> Clone for BitmapSet<T> {
 }
 
 impl<T: BitmapFinite> Copy for BitmapSet<T> {}
+
+impl<T: BitmapFinite> PartialEq for BitmapSet<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<T: BitmapFinite> Eq for BitmapSet<T> {}
+
+impl<T: BitmapFinite> PartialOrd for BitmapSet<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        self.0.partial_cmp(&other.0)
+    }
+}
+
+impl<T: BitmapFinite> Ord for BitmapSet<T> {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+
+unsafe impl<T: BitmapFinite> Finite for BitmapSet<T> {
+    const COUNT: usize = 1 << T::COUNT;
+
+    fn index_of(value: Self) -> usize {
+        value.0.to_usize()
+    }
+
+    fn nth(index: usize) -> Option<Self> {
+        if index < Self::COUNT {
+            Some(Self(T::Bitmap::from_usize_unchecked(index)))
+        } else {
+            None
+        }
+    }
+}
 
 impl<T: core::fmt::Debug + BitmapFinite> core::fmt::Debug for BitmapSet<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
