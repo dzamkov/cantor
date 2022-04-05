@@ -53,6 +53,20 @@ impl<K: ArrayFinite<V>, V> ArrayMap<K, V> {
         }))
     }
 
+    /// Constructs a new [`ArrayMap`] from an array of values, each corresponding to the key
+    /// determined by [`Finite::nth`].
+    /// 
+    /// # Example
+    /// ```
+    /// use cantor::*;
+    /// let map = ArrayMap::from([1, 3]);
+    /// assert_eq!(map[false], 1);
+    /// assert_eq!(map[true], 3);
+    /// ```
+    pub fn from(array: K::Array) -> Self {
+        Self(array)
+    }
+
     /// Applies a mapping function the values of this map.
     pub fn map_with_key<N>(&self, mut f: impl FnMut(K, &V) -> N) -> ArrayMap<K, N>
     where
