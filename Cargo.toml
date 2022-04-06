@@ -1,6 +1,6 @@
 [package]
 name = "cantor"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Dmitry Zamkov <dmitry94@gmail.com>"]
 description = "A general toolkit for working with types that have a small number of values"
