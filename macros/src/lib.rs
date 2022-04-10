@@ -28,8 +28,7 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
                         let mut field_tys = Vec::new();
                         let mut field_idents = Vec::new();
                         for field in fields.named {
-                            let field_ty = field.ty;
-                            field_tys.push(field_ty.to_token_stream());
+                            field_tys.push(field.ty.to_token_stream());
                             field_idents.push(field.ident.to_token_stream());
                         }
                         let index_of_arm = product_index_of(&*field_tys, &*field_idents);
@@ -255,7 +254,10 @@ impl ToTokens for SumExpr {
 /// Gets an expression for the number of values for a product of the given types.
 fn product_count(field_tys: &[TokenStream2]) -> NumTerm {
     if let Some((head_field_ty, tail_field_tys)) = field_tys.split_first() {
-        NumTerm::Complex(quote! { #head_field_ty::COUNT #(* #tail_field_tys::COUNT)* })
+        NumTerm::Complex(quote! { 
+            <#head_field_ty as ::cantor::Finite>::COUNT
+            #(* <#tail_field_tys as ::cantor::Finite>::COUNT)*
+        })
     } else {
         NumTerm::Literal(1)
     }
@@ -267,7 +269,9 @@ fn product_index_of(field_tys: &[TokenStream2], fields: &[TokenStream2]) -> Toke
     quote! {
         {
             let __index = 0;
-            #(let __index = __index * #field_tys::COUNT + #field_tys::index_of(#fields);)*
+            #(let __index = __index * 
+                <#field_tys as ::cantor::Finite>::COUNT +
+                <#field_tys as ::cantor::Finite>::index_of(#fields);)*
             __index
         }
     }
@@ -287,8 +291,9 @@ fn product_nth(
         {
             let __index = #index;
             #(
-                let #fields_rev = #field_tys_rev::nth(__index % #field_tys_rev::COUNT).unwrap();
-                let __index = __index / #field_tys_rev::COUNT;
+                let #fields_rev = <#field_tys_rev as ::cantor::Finite>::nth(__index %
+                    <#field_tys_rev as ::cantor::Finite>::COUNT).unwrap();
+                let __index = __index / <#field_tys_rev as ::cantor::Finite>::COUNT;
             )*
             #cons
         }

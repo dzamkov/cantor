@@ -44,3 +44,14 @@ enum Tile {
 fn test_tile() {
     validate::<Tile>(1 + 3 + 3 + 3 * 3 * 2);
 }
+
+#[derive(Finite, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+enum Marker {
+    Left(Option<Color>),
+    Right(Option<Color>)
+}
+
+#[test]
+fn test_marker() {
+    validate::<Marker>(1 + 3 + 1 + 3);
+}
