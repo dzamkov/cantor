@@ -55,7 +55,7 @@ impl<K: ArrayFinite<V>, V> ArrayMap<K, V> {
 
     /// Constructs a new [`ArrayMap`] from an array of values, each corresponding to the key
     /// determined by [`Finite::nth`].
-    /// 
+    ///
     /// # Example
     /// ```
     /// use cantor::*;
@@ -122,6 +122,46 @@ impl<K: CompressFinite + ArrayFinite<V>, V> IndexMut<Compress<K>> for ArrayMap<K
     fn index_mut(&mut self, index: Compress<K>) -> &mut Self::Output {
         let index = Compress::index_of(index);
         unsafe { self.0.as_slice_mut().get_unchecked_mut(index) }
+    }
+}
+
+impl<K: ArrayFinite<V>, V> Clone for ArrayMap<K, V>
+where
+    K::Array: Clone,
+{
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<K: ArrayFinite<V>, V> Copy for ArrayMap<K, V> where K::Array: Copy {}
+
+impl<K: ArrayFinite<V>, V> PartialEq for ArrayMap<K, V>
+where
+    K::Array: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<K: ArrayFinite<V>, V> Eq for ArrayMap<K, V> where K::Array: Eq {}
+
+impl<K: ArrayFinite<V>, V> PartialOrd for ArrayMap<K, V>
+where
+    K::Array: PartialOrd,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        self.0.partial_cmp(&other.0)
+    }
+}
+
+impl<K: ArrayFinite<V>, V> Ord for ArrayMap<K, V>
+where
+    K::Array: Ord,
+{
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.0.cmp(&other.0)
     }
 }
 
