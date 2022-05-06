@@ -105,6 +105,7 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
                     const COUNT: usize = #count;
 
                     fn index_of(value: Self) -> usize {
+                        #(#consts)*
                         match value {
                             #(#index_of_arms,)*
                         }

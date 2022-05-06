@@ -55,3 +55,21 @@ enum Marker {
 fn test_marker() {
     validate::<Marker>(1 + 3 + 1 + 3);
 }
+
+#[derive(Finite, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+enum General {
+    Specific(Specific),
+    C,
+    D
+}
+
+#[derive(Finite, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+enum Specific {
+    A,
+    B
+}
+
+#[test]
+fn test_general() {
+    validate::<General>(2 + 2);
+}
