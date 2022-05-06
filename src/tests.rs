@@ -73,3 +73,30 @@ enum Specific {
 fn test_general() {
     validate::<General>(2 + 2);
 }
+
+#[derive(Finite, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+struct Unit;
+
+#[test]
+fn test_unit() {
+    validate::<Unit>(1);
+}
+
+#[derive(Finite, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+struct ColorTriple(Color, Color, Color);
+
+#[test]
+fn test_color_triple() {
+    validate::<ColorTriple>(3 * 3 * 3);
+}
+
+#[derive(Finite, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+struct Options {
+    pub color: Color,
+    general: General
+}
+
+#[test]
+fn test_options() {
+    validate::<Options>(3 * (2 + 2));
+}

@@ -8,8 +8,82 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let mut res = match input.data {
-        Data::Struct(_) => todo!(),
+    let (count, index_of, nth) = match input.data {
+        Data::Struct(data) => match data.fields {
+            Fields::Named(fields) => {
+                let mut field_tys = Vec::new();
+                let mut field_idents = Vec::new();
+                for field in fields.named {
+                    field_tys.push(field.ty.to_token_stream());
+                    field_idents.push(field.ident.to_token_stream());
+                }
+                let count = product_count(&*field_tys);
+                let index_of = product_index_of(&*field_tys, &*field_idents);
+                let nth = product_nth(
+                    &*field_tys,
+                    quote! { index },
+                    &*field_idents,
+                    quote! { Self { #(#field_idents),* } },
+                );
+                (
+                    quote! { #count }, 
+                    quote! {
+                        let Self { #(#field_idents),* } = value;
+                        #index_of
+                    },
+                    quote! {
+                        if index < <Self as ::cantor::Finite>::COUNT {
+                            Some(#nth)
+                        } else {
+                            None
+                        }
+                    }
+                )
+            },
+            Fields::Unnamed(fields) => {
+                let mut field_tys = Vec::new();
+                let mut field_idents = Vec::new();
+                for field in fields.unnamed {
+                    field_tys.push(field.ty.to_token_stream());
+                    let field_ident = format!("f{}", field_idents.len());
+                    let field_ident = Ident::new(&*field_ident, Span::call_site());
+                    field_idents.push(field_ident.to_token_stream());
+                }
+                let count = product_count(&*field_tys);
+                let index_of = product_index_of(&*field_tys, &*field_idents);
+                let nth = product_nth(
+                    &*field_tys,
+                    quote! { index },
+                    &*field_idents,
+                    quote! { Self(#(#field_idents),*) },
+                );
+                (
+                    quote! { #count }, 
+                    quote! {
+                        let Self(#(#field_idents),*) = value;
+                        #index_of
+                    },
+                    quote! {
+                        if index < <Self as ::cantor::Finite>::COUNT {
+                            Some(#nth)
+                        } else {
+                            None
+                        }
+                    }
+                )
+            }
+            Fields::Unit => (
+                quote! { 1 },
+                quote! { 0 },
+                quote! {
+                    if index < 1 {
+                        Some(Self)
+                    } else {
+                        None
+                    }
+                },
+            ),
+        },
         Data::Enum(data) => {
             // Gather info from variants
             let mut count = SumExpr::new_zero();
@@ -97,30 +171,39 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
                 };
             }
             nth_arms.push(quote! { _ => None });
-
-            // Build implementation
-            quote! {
-                #[automatically_derived]
-                unsafe impl #impl_generics ::cantor::Finite for #name #ty_generics #where_clause {
-                    const COUNT: usize = #count;
-
-                    fn index_of(value: Self) -> usize {
-                        #(#consts)*
-                        match value {
-                            #(#index_of_arms,)*
-                        }
+            (
+                quote! { #count },
+                quote! {
+                    #(#consts)*
+                    match value {
+                        #(#index_of_arms,)*
                     }
-
-                    fn nth(index: usize) -> Option<Self> {
-                        #(#consts)*
-                        match index {
-                            #(#nth_arms,)*
-                        }
+                },
+                quote! {
+                    #(#consts)*
+                    match index {
+                        #(#nth_arms,)*
                     }
-                }
-            }
+                },
+            )
         }
         Data::Union(_) => todo!(),
+    };
+
+    // Build implementation
+    let mut res = quote! {
+        #[automatically_derived]
+        unsafe impl #impl_generics ::cantor::Finite for #name #ty_generics #where_clause {
+            const COUNT: usize = #count;
+
+            fn index_of(value: Self) -> usize {
+                #index_of
+            }
+
+            fn nth(index: usize) -> Option<Self> {
+                #nth
+            }
+        }
     };
 
     // If this is a concrete type (no generic parameters), also implement helper traits.
@@ -147,7 +230,7 @@ impl ToTokens for SimpleNumTerm {
             SimpleNumTerm::Literal(value) => {
                 tokens.append(TokenTree::Literal(Literal::i64_unsuffixed(*value)))
             }
-            SimpleNumTerm::Constant(ident) => tokens.append(TokenTree::Ident(ident.clone()))
+            SimpleNumTerm::Constant(ident) => tokens.append(TokenTree::Ident(ident.clone())),
         }
     }
 }
@@ -162,7 +245,7 @@ impl ToTokens for NonLiteralNumTerm {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
         match self {
             NonLiteralNumTerm::Constant(ident) => tokens.append(TokenTree::Ident(ident.clone())),
-            NonLiteralNumTerm::Complex(expr) => tokens.extend(expr.clone())
+            NonLiteralNumTerm::Complex(expr) => tokens.extend(expr.clone()),
         }
     }
 }
@@ -179,7 +262,19 @@ impl From<SimpleNumTerm> for NumTerm {
     fn from(term: SimpleNumTerm) -> Self {
         match term {
             SimpleNumTerm::Literal(value) => NumTerm::Literal(value),
-            SimpleNumTerm::Constant(ident) => NumTerm::Constant(ident)
+            SimpleNumTerm::Constant(ident) => NumTerm::Constant(ident),
+        }
+    }
+}
+
+impl ToTokens for NumTerm {
+    fn to_tokens(&self, tokens: &mut TokenStream2) {
+        match self {
+            NumTerm::Literal(value) => {
+                tokens.append(TokenTree::Literal(Literal::i64_unsuffixed(*value)))
+            }
+            NumTerm::Constant(ident) => tokens.append(TokenTree::Ident(ident.clone())),
+            NumTerm::Complex(expr) => tokens.extend(expr.clone()),
         }
     }
 }
@@ -255,7 +350,7 @@ impl ToTokens for SumExpr {
 /// Gets an expression for the number of values for a product of the given types.
 fn product_count(field_tys: &[TokenStream2]) -> NumTerm {
     if let Some((head_field_ty, tail_field_tys)) = field_tys.split_first() {
-        NumTerm::Complex(quote! { 
+        NumTerm::Complex(quote! {
             <#head_field_ty as ::cantor::Finite>::COUNT
             #(* <#tail_field_tys as ::cantor::Finite>::COUNT)*
         })
@@ -270,7 +365,7 @@ fn product_index_of(field_tys: &[TokenStream2], fields: &[TokenStream2]) -> Toke
     quote! {
         {
             let __index = 0;
-            #(let __index = __index * 
+            #(let __index = __index *
                 <#field_tys as ::cantor::Finite>::COUNT +
                 <#field_tys as ::cantor::Finite>::index_of(#fields);)*
             __index
