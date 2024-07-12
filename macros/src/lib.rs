@@ -17,16 +17,16 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
                     field_tys.push(field.ty.to_token_stream());
                     field_idents.push(field.ident.to_token_stream());
                 }
-                let count = product_count(&*field_tys);
-                let index_of = product_index_of(&*field_tys, &*field_idents);
+                let count = product_count(&field_tys);
+                let index_of = product_index_of(&field_tys, &field_idents);
                 let nth = product_nth(
-                    &*field_tys,
+                    &field_tys,
                     quote! { index },
-                    &*field_idents,
+                    &field_idents,
                     quote! { Self { #(#field_idents),* } },
                 );
                 (
-                    quote! { #count }, 
+                    quote! { #count },
                     quote! {
                         let Self { #(#field_idents),* } = value;
                         #index_of
@@ -37,28 +37,28 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
                         } else {
                             None
                         }
-                    }
+                    },
                 )
-            },
+            }
             Fields::Unnamed(fields) => {
                 let mut field_tys = Vec::new();
                 let mut field_idents = Vec::new();
                 for field in fields.unnamed {
                     field_tys.push(field.ty.to_token_stream());
                     let field_ident = format!("f{}", field_idents.len());
-                    let field_ident = Ident::new(&*field_ident, Span::call_site());
+                    let field_ident = Ident::new(&field_ident, Span::call_site());
                     field_idents.push(field_ident.to_token_stream());
                 }
-                let count = product_count(&*field_tys);
-                let index_of = product_index_of(&*field_tys, &*field_idents);
+                let count = product_count(&field_tys);
+                let index_of = product_index_of(&field_tys, &field_idents);
                 let nth = product_nth(
-                    &*field_tys,
+                    &field_tys,
                     quote! { index },
-                    &*field_idents,
+                    &field_idents,
                     quote! { Self(#(#field_idents),*) },
                 );
                 (
-                    quote! { #count }, 
+                    quote! { #count },
                     quote! {
                         let Self(#(#field_idents),*) = value;
                         #index_of
@@ -69,7 +69,7 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
                         } else {
                             None
                         }
-                    }
+                    },
                 )
             }
             Fields::Unit => (
@@ -105,17 +105,17 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
                             field_tys.push(field.ty.to_token_stream());
                             field_idents.push(field.ident.to_token_stream());
                         }
-                        let index_of_arm = product_index_of(&*field_tys, &*field_idents);
+                        let index_of_arm = product_index_of(&field_tys, &field_idents);
                         index_of_arms.push(quote! {
                             Self::#variant_name { #(#field_idents),* } => #count + #index_of_arm
                         });
                         let nth_arm = product_nth(
-                            &*field_tys,
+                            &field_tys,
                             quote! { index - #start_index },
-                            &*field_idents,
+                            &field_idents,
                             quote! { Self::#variant_name { #(#field_idents),* } },
                         );
-                        let variant_count = product_count(&*field_tys);
+                        let variant_count = product_count(&field_tys);
                         count.add(variant_count.clone());
                         const_count.add(variant_count);
                         const_count.add(NumTerm::Literal(-1));
@@ -133,20 +133,20 @@ pub fn derive_finite(input: TokenStream) -> TokenStream {
                         for field in fields.unnamed {
                             field_tys.push(field.ty.to_token_stream());
                             let field_ident = format!("f{}", field_idents.len());
-                            let field_ident = Ident::new(&*field_ident, Span::call_site());
+                            let field_ident = Ident::new(&field_ident, Span::call_site());
                             field_idents.push(field_ident.to_token_stream());
                         }
-                        let index_of_arm = product_index_of(&*field_tys, &*field_idents);
+                        let index_of_arm = product_index_of(&field_tys, &field_idents);
                         index_of_arms.push(quote! {
                             Self::#variant_name(#(#field_idents),*) => #count + #index_of_arm
                         });
                         let nth_arm = product_nth(
-                            &*field_tys,
+                            &field_tys,
                             quote! { index - #start_index },
-                            &*field_idents,
+                            &field_idents,
                             quote! { Self::#variant_name(#(#field_idents),*) },
                         );
-                        let variant_count = product_count(&*field_tys);
+                        let variant_count = product_count(&field_tys);
                         count.add(variant_count.clone());
                         const_count.add(variant_count);
                         const_count.add(NumTerm::Literal(-1));
@@ -312,18 +312,15 @@ impl SumExpr {
     /// Gets a [`SimpleNumTerm`] representation of this expression, assuming its possible to define
     /// an arbitrary constant ahead of time.
     pub fn get_simple(&mut self, consts: &mut Vec<TokenStream2>) -> SimpleNumTerm {
-        if self.non_lit.len() == 0 {
+        if self.non_lit.is_empty() {
             return SimpleNumTerm::Literal(self.lit);
         } else if self.lit == 0 && self.non_lit.len() == 1 {
-            match &self.non_lit[0] {
-                NonLiteralNumTerm::Constant(ident) => {
-                    return SimpleNumTerm::Constant(ident.clone());
-                }
-                _ => (),
+            if let NonLiteralNumTerm::Constant(ident) = &self.non_lit[0] {
+                return SimpleNumTerm::Constant(ident.clone());
             }
         }
         let ident = format!("C_{}", consts.len());
-        let ident = Ident::new(&*ident, Span::call_site());
+        let ident = Ident::new(&ident, Span::call_site());
         consts.push(quote! { const #ident: usize = #self; });
         SimpleNumTerm::Constant(ident)
     }

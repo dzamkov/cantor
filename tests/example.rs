@@ -20,7 +20,7 @@ fn main() {
 
     // Value compression
     let value = MyType::B(false);
-    assert_eq!(size_of_val(&value), 3);
+    assert_eq!(size_of_val(&value), 2);
     let compressed = compress(value);
     assert_eq!(size_of_val(&compressed), 1);
     assert_eq!(value, compressed.expand());

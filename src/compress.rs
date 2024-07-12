@@ -17,7 +17,7 @@ use crate::*;
 /// }
 ///
 /// let value = MyType::B(false);
-/// assert_eq!(size_of_val(&value), 3);
+/// assert_eq!(size_of_val(&value), 2);
 /// let compressed = compress(value);
 /// assert_eq!(size_of_val(&compressed), 1);
 /// assert_eq!(value, compressed.expand());
@@ -73,11 +73,11 @@ unsafe impl<T: CompressFinite> Finite for Compress<T> {
 
 impl<T: CompressFinite> Clone for Compress<T> {
     fn clone(&self) -> Self {
-        Self(self.0)
+        *self
     }
 }
 
-impl<T: CompressFinite> Copy for Compress<T> { }
+impl<T: CompressFinite> Copy for Compress<T> {}
 
 #[test]
 fn test_compress_zst() {

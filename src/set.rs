@@ -206,7 +206,7 @@ impl<T: BitmapFinite> SubAssign<BitmapSet<T>> for BitmapSet<T> {
 
 impl<T: BitmapFinite> Clone for BitmapSet<T> {
     fn clone(&self) -> Self {
-        Self(self.0)
+        *self
     }
 }
 
@@ -222,7 +222,7 @@ impl<T: BitmapFinite> Eq for BitmapSet<T> {}
 
 impl<T: BitmapFinite> PartialOrd for BitmapSet<T> {
     fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-        self.0.partial_cmp(&other.0)
+        Some(self.cmp(other))
     }
 }
 
